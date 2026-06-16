@@ -1,4 +1,4 @@
-// Last updated: 2026-06-16 — BUG2: r/hiring seller filter; BUG3: universal showcase/seller filter
+// Last updated: 2026-06-16 — BUG4: r/webdev help-request false positive filter
 import axios from "axios";
 import { fetchFeed, RssEntry } from "./rss";
 import { isSeen, markSeenBatch } from "./dedup";
@@ -39,6 +39,17 @@ const WEBDEV_SHOWCASE_PATTERNS = [
   "free for solo",
 ];
 
+const WEBDEV_HELP_REQUEST_PATTERNS = [
+  "need help", "help with", "help setting up", "help me",
+  "how do i", "how to", "anyone know", "looking for guidance",
+  "looking for help", "looking for tutorials", "looking for resources",
+  "struggling with", "having trouble", "having a hard time",
+  "can someone explain", "does anyone have", "what is the best way",
+  "best practice", "recommendations for", "advice on", "guidance on",
+  "newbie", "beginner", "just started", "not sure how",
+  "unsure how", "unsure which",
+];
+
 /**
  * Pre-filters posts by intent before they reach the AI, to avoid wasting
  * API calls on freelancer self-ads and community showcase threads.
@@ -71,8 +82,12 @@ function passesIntentFilter(feedUrl: string, title: string): boolean {
     return true;
   }
 
-  // r/webdev: showcase patterns already caught above
+  // r/webdev: help-request posts have no buying intent — skip them
   if (feedUrl.includes("/r/webdev/")) {
+    if (WEBDEV_HELP_REQUEST_PATTERNS.some((pattern) => lower.includes(pattern))) {
+      console.log(`[INTENT-FILTER] Skipped (help request, no buying intent): ${title}`);
+      return false;
+    }
     return true;
   }
 
@@ -166,10 +181,16 @@ function runIntentFilterTests(): void {
     { feedUrl: "https://www.reddit.com/r/hiring/new/.rss", title: "[FOR HIRE] Senior React Developer available for hire", expected: false },
     { feedUrl: "https://www.reddit.com/r/webdev/new/.rss", title: "Show Showoff Saturday: Site Mirror Skill — Open-source CLI", expected: false },
     { feedUrl: "https://www.reddit.com/r/webdev/new/.rss", title: "I built a lightweight, zero dependency TS table/grid", expected: false },
+    // r/webdev help-requests — Should FAIL (skip)
+    { feedUrl: "https://www.reddit.com/r/webdev/new/.rss", title: "Need help in setting up Single-SPA + React + Vite + TypeScript microfrontend architecture", expected: false },
+    { feedUrl: "https://www.reddit.com/r/webdev/new/.rss", title: "How do I optimize React re-renders in a large dashboard?", expected: false },
+    { feedUrl: "https://www.reddit.com/r/webdev/new/.rss", title: "Looking for guidance on Next.js App Router migration", expected: false },
+    { feedUrl: "https://www.reddit.com/r/webdev/new/.rss", title: "Having trouble with TypeScript generics, can someone explain?", expected: false },
     // Should PASS
     { feedUrl: "https://www.reddit.com/r/forhire/new/.rss", title: "[HIRING] React developer needed for SaaS startup", expected: true },
     { feedUrl: "https://www.reddit.com/r/forhire/new/.rss", title: "Coding Sprint [Hiring]", expected: true },
     { feedUrl: "https://www.reddit.com/r/hiring/new/.rss", title: "Looking for a frontend engineer, remote, $80-120/hr", expected: true },
+    { feedUrl: "https://www.reddit.com/r/webdev/new/.rss", title: "[Hiring] React developer needed for 2-week project", expected: true },
   ];
 
   let passed = 0;
