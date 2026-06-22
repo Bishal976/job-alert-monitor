@@ -1,5 +1,11 @@
 # Job Alert Monitor
 
+> **⚠ Proprietary — All Rights Reserved.** This repository is public for
+> portfolio/demonstration purposes only. It is **not** open source: no
+> license is granted to use, copy, fork for redistribution, or create
+> derivative works from any part of this code. See [`LICENSE`](LICENSE).
+> Data-handling practices are documented in [`PRIVACY.md`](PRIVACY.md).
+
 An automated lead-monitoring CLI for freelance/contract frontend work. It polls Reddit
 and Hacker News for relevant posts, filters out noise, scores the remaining leads with
 an LLM, and emails you the strong matches with a ready-to-send outreach draft.
@@ -90,3 +96,10 @@ Seen post/comment IDs are stored in `seen_posts.json`, tracked in git (not
 gitignored) so the GitHub Actions workflows can persist it across runs. Delete its
 contents (or the relevant source's array) to re-alert on everything currently in
 the feeds.
+
+## License & Privacy
+
+Proprietary — All Rights Reserved. See [`LICENSE`](LICENSE) for terms and
+[`PRIVACY.md`](PRIVACY.md) for how this tool handles data. This repo is public
+for visibility only; it is not licensed for reuse, forking-for-redistribution,
+or derivative works.
